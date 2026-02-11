@@ -257,7 +257,7 @@ def borrow():
 
     if request.headers.get("HX-Request"):
         logs = KeyLog.query.order_by(KeyLog.created_at.desc()).all()
-        return render_template("key/_table_body.html", logs=logs)
+        return render_template("key/_table_body_oob.html", logs=logs)
 
     return redirect(url_for("key.index"))
 
@@ -363,7 +363,7 @@ def return_key(log_id):
 
     if request.headers.get("HX-Request"):
         logs = KeyLog.query.order_by(KeyLog.created_at.desc()).all()
-        return render_template("key/_table_body.html", logs=logs)
+        return render_template("key/_table_body_oob.html", logs=logs)
 
     return redirect(url_for("key.index"))
 
