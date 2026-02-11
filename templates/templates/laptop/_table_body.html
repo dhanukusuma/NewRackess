@@ -1,0 +1,90 @@
+<tbody id="laptop-table-body">
+  {% for log in logs %}
+  <tr class="border-b last:border-0">
+    
+    <td class="py-2 px-3">
+      {{ log.ticket_mbs or "-" }}
+    </td>
+
+    <td class="px-3">
+      {{ log.borrower_name }}
+    </td>
+
+    <td class="px-3">
+      {{ log.borrower_division }}
+    </td>
+
+    <td class="px-3">
+      {{ log.laptop_name }}
+    </td>
+
+    <td class="px-3">
+      {{ log.purpose }}
+    </td>
+
+    <td class="px-3">
+      {{ log.status }}
+    </td>
+
+    <td class="px-3">
+      {{ log.time_out.strftime('%Y-%m-%d %H:%M') if log.time_out else '-' }}
+    </td>
+    
+    <!-- 🆕 Rencana Tgl Kembali -->
+    <td class="px-3">
+      {{ log.planned_return_date.strftime('%Y-%m-%d') if log.planned_return_date else '-' }}
+    </td>
+
+    <td class="px-3">
+      {{ log.time_in.strftime('%Y-%m-%d %H:%M') if log.time_in else '-' }}
+    </td>
+
+
+
+    <!-- 🆕 Ketepatan Pengembalian -->
+    <td class="px-3">
+      {{ get_return_status(log) }}
+    </td>
+
+    <td class="px-3">
+      {{ log.staff_out_name or '-' }}
+    </td>
+    
+    <td class="px-3">
+      {{ log.staff_in_name or '-' }}
+    </td>
+    <td class="px-3">
+        <div class="flex items-center gap-1">
+            <button
+            class="px-2 py-1 text-[11px] bg-slate-700 text-white rounded hover:bg-slate-800"
+            hx-get="{{ url_for('laptop.detail', log_id=log.id) }}"
+            hx-target="#modal-container"
+            hx-trigger="click"
+            >
+            Detail
+            </button>
+
+            {% if log.status == 'borrowed' %}
+            <button
+                class="px-2 py-1 text-[11px] bg-emerald-600 text-white rounded hover:bg-emerald-700"
+                hx-get="{{ url_for('laptop.return_form', log_id=log.id) }}"
+                hx-target="#modal-container"
+                hx-trigger="click"
+            >
+                Kembalikan
+            </button>
+            {% else %}
+            <span class="text-[11px] text-slate-400">Selesai</span>
+            {% endif %}
+        </div>
+        </td>
+
+  </tr>
+  {% else %}
+  <tr>
+    <td colspan="11" class="py-3 text-center text-slate-400 italic">
+      Belum ada transaksi peminjaman laptop.
+    </td>
+  </tr>
+  {% endfor %}
+</tbody>

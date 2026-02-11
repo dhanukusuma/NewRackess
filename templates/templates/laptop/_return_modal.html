@@ -1,0 +1,315 @@
+<div class="fixed inset-0 bg-black/40 z-50 overflow-y-auto">
+  <div class="min-h-full flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-xl max-h-[90vh] overflow-y-auto">
+      <!-- HEADER MODAL -->
+      <div class="flex items-center justify-between px-4 pt-4 pb-2 border-b">
+    <h2 class="text-sm font-semibold text-slate-800 mb-3">
+      Pengembalian Laptop
+    </h2>
+        <button
+          type="button"
+          class="text-xs text-slate-500 hover:text-slate-700"
+          onclick="document.getElementById('modal-container').innerHTML='';"
+        >
+          ✕
+        </button>
+  </div>  
+
+    <!-- BODY MODAL -->
+    <div class="p-4"> 
+    <div class="text-xs mb-3 space-y-1">
+      <div><span class="font-semibold">Laptop:</span> {{ log.laptop_name }}</div>
+      <div><span class="font-semibold">Peminjam:</span> {{ log.borrower_name }} ({{ log.borrower_division }})</div>
+      <div>
+        <span class="font-semibold">Tanggal Pinjam:</span>
+        {{ log.time_out.strftime('%Y-%m-%d %H:%M') if log.time_out else '-' }}
+      </div>
+    </div>
+
+    <form
+      hx-post="{{ url_for('laptop.return_laptop', log_id=log.id) }}"
+      hx-target="#laptop-table-body"
+      hx-swap="outerHTML"
+      onsubmit="return validateReturnTTD();"
+    >
+      <!-- Tanggal & waktu kembali -->
+      <div class="mb-3">
+        <label class="block text-xs font-medium text-slate-700 mb-1">
+          Tanggal & Waktu Kembali
+        </label>
+        <input
+          type="datetime-local"
+          name="time_in"
+          class="w-full border rounded px-3 py-2 text-xs focus:outline-none focus:ring"
+          value="{{ now.strftime('%Y-%m-%dT%H:%M') }}"
+          required
+        >
+      </div>
+
+      <!-- Petugas NOC (KEMBALI) -->
+      <div class="mb-3">
+        <label class="block text-xs font-medium text-slate-700 mb-1">
+          Petugas NOC (KEMBALI)
+        </label>
+        <select
+          name="staff_in_name"
+          class="w-full border rounded px-3 py-2 text-xs focus:outline-none focus:ring"
+          required
+        >
+          <option value="">Pilih petugas</option>
+          {% for name in staff_names %}
+            <option value="{{ name }}">{{ name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- TTD Peminjam & Petugas (KEMBALI) pakai popup canvas -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+        <!-- TTD Peminjam -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-medium text-slate-700">
+              TTD Peminjam (Kembali)
+            </label>
+            <button
+              type="button"
+              class="text-[11px] text-slate-500 hover:text-slate-700"
+              onclick="clearTtdPreview('out_visitor');"
+            >
+              Clear
+            </button>
+          </div>
+
+          <button
+            type="button"
+            class="w-full border rounded px-3 py-2 text-[11px] text-slate-600 bg-slate-50 hover:bg-slate-100 text-left"
+            onclick="openTtdPopup('out_visitor', 'Tanda Tangan Peminjam (Kembali)');"
+          >
+            Klik untuk tanda tangan dengan Pad Signature
+          </button>
+
+          <!-- preview kecil -->
+          <div class="mt-1">
+            <img
+              id="preview_out_visitor"
+              class="hidden border rounded max-h-20"
+              alt="Preview TTD Peminjam (Kembali)"
+            >
+          </div>
+
+          <input type="hidden" name="sig_out_visitor" id="sig_out_visitor">
+        </div>
+
+        <!-- TTD Petugas -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-medium text-slate-700">
+              TTD Petugas (Terima)
+            </label>
+            <button
+              type="button"
+              class="text-[11px] text-slate-500 hover:text-slate-700"
+              onclick="clearTtdPreview('out_staff');"
+            >
+              Clear
+            </button>
+          </div>
+
+          <button
+            type="button"
+            class="w-full border rounded px-3 py-2 text-[11px] text-slate-600 bg-slate-50 hover:bg-slate-100 text-left"
+            onclick="openTtdPopup('out_staff', 'Tanda Tangan Petugas (Terima)');"
+          >
+            Klik untuk tanda tangan dengan Pad Signature
+          </button>
+
+          <!-- preview kecil -->
+          <div class="mt-1">
+            <img
+              id="preview_out_staff"
+              class="hidden border rounded max-h-20"
+              alt="Preview TTD Petugas (Terima)"
+            >
+          </div>
+
+          <input type="hidden" name="sig_out_staff" id="sig_out_staff">
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 mt-4 text-xs">
+        <button
+          type="button"
+          class="px-3 py-1 border rounded text-slate-600"
+          onclick="document.getElementById('modal-container').innerHTML = '';"
+        >
+          Batal
+        </button>
+        <button
+          type="submit"
+          class="px-3 py-1 bg-emerald-600 text-white rounded"
+        >
+          Simpan Pengembalian
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+</div>
+
+<!-- POPUP TTD (canvas besar) -->
+<div
+  id="ttdPopup"
+  class="fixed inset-0 z-60 hidden items-center justify-center bg-black/40"
+>
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-4">
+    <div class="flex items-center justify-between mb-2">
+      <h2
+        id="ttdPopupTitle"
+        class="text-sm font-semibold text-slate-800"
+      >
+        Tanda Tangan
+      </h2>
+      <button
+        type="button"
+        class="text-xs text-slate-500 hover:text-slate-700"
+        onclick="closeTtdPopup();"
+      >
+        ✕
+      </button>
+    </div>
+
+    <div class="border rounded bg-slate-50 overflow-hidden">
+      <canvas
+        id="ttdCanvas"
+        class="w-full h-40 block"
+        style="touch-action:none;"
+      ></canvas>
+    </div>
+
+    <p class="mt-2 text-[10px] text-slate-500">
+      Gunakan Pad Signature atau mouse untuk tanda tangan.
+    </p>
+
+    <div class="mt-3 flex justify-between">
+      <button
+        type="button"
+        class="px-3 py-1 text-[11px] border rounded text-slate-600 hover:bg-slate-50"
+        onclick="clearTtdCanvas();"
+      >
+        Clear
+      </button>
+      <button
+        type="button"
+        class="px-3 py-1 text-[11px] bg-emerald-600 text-white rounded hover:bg-emerald-700"
+        onclick="saveTtdFromPopup();"
+      >
+        Simpan Tanda Tangan
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let sigPadBorrow = null;
+  let currentTtdKey = null; // 'in_visitor' atau 'in_staff'
+  let borrowResizeHandler = null;
+
+  function setupBorrowCanvas() {
+    const canvas = document.getElementById('ttdCanvas');
+    if (!canvas) return;
+
+    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+    const rect = canvas.getBoundingClientRect();
+
+    canvas.width = rect.width * ratio;
+    canvas.height = rect.height * ratio;
+
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+    // bikin SignaturePad BARU tiap kali modal dipakai
+    sigPadBorrow = new SignaturePad(canvas, {
+      backgroundColor: 'rgba(255,255,255,1)',
+      penColor: 'black'
+    });
+
+    // kalau sebelumnya sudah ada handler resize, cabut dulu
+    if (borrowResizeHandler) {
+      window.removeEventListener('resize', borrowResizeHandler);
+    }
+
+    // handler baru untuk resize/zoom
+    borrowResizeHandler = function () {
+      const rect2 = canvas.getBoundingClientRect();
+      const ratio2 = Math.max(window.devicePixelRatio || 1, 1);
+
+      canvas.width = rect2.width * ratio2;
+      canvas.height = rect2.height * ratio2;
+      ctx.setTransform(ratio2, 0, 0, ratio2, 0, 0);
+
+      if (sigPadBorrow) sigPadBorrow.clear();
+    };
+
+    window.addEventListener('resize', borrowResizeHandler);
+  }
+
+  function openTtdPopup(key, titleText) {
+    currentTtdKey = key; // 'in_visitor' / 'in_staff'
+
+    const popup = document.getElementById('ttdPopup');
+    popup.classList.remove('hidden');
+    popup.classList.add('flex');
+
+    const titleEl = document.getElementById('ttdPopupTitle');
+    if (titleText) titleEl.textContent = titleText;
+
+    // SELALU init ulang ke canvas yang BARU di DOM
+    setupBorrowCanvas();
+  }
+
+  function closeTtdPopup() {
+    const popup = document.getElementById('ttdPopup');
+    popup.classList.add('hidden');
+    popup.classList.remove('flex');
+  }
+
+  function clearTtdCanvas() {
+    if (sigPadBorrow) sigPadBorrow.clear();
+  }
+
+  function saveTtdFromPopup() {
+    if (!sigPadBorrow || sigPadBorrow.isEmpty()) {
+      alert('Tanda tangan masih kosong.');
+      return;
+    }
+    if (!currentTtdKey) {
+      alert('Field TTD tidak dikenali.');
+      return;
+    }
+
+    const dataUrl = sigPadBorrow.toDataURL('image/png');
+
+    // hidden input (sig_in_visitor / sig_in_staff)
+    const hidden = document.getElementById('sig_' + currentTtdKey);
+    if (hidden) hidden.value = dataUrl;
+
+    // preview img (preview_in_visitor / preview_in_staff)
+    const preview = document.getElementById('preview_' + currentTtdKey);
+    if (preview) {
+      preview.src = dataUrl;
+      preview.classList.remove('hidden');
+    }
+
+    closeTtdPopup();
+  }
+
+  function clearTtdPreview(key) {
+    const hidden = document.getElementById('sig_' + key);
+    const preview = document.getElementById('preview_' + key);
+    if (hidden) hidden.value = '';
+    if (preview) {
+      preview.src = '';
+      preview.classList.add('hidden');
+    }
+  }
+</script>

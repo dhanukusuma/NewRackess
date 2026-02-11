@@ -1,0 +1,377 @@
+{% if error_message %}
+<div class="alert alert-danger mb-3">
+  {{ error_message }}
+</div>
+{% endif %}
+
+<div class="fixed inset-0 bg-black/40 z-50 overflow-y-auto">
+  <div class="min-h-full flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-xl max-h-[90vh] overflow-y-auto">
+      <!-- HEADER MODAL -->
+      <div class="flex items-center justify-between px-4 pt-4 pb-2 border-b">
+        <h2 class="text-sm font-semibold text-slate-800">
+          Peminjaman Kunci Rak
+        </h2>
+        <button
+          type="button"
+          class="text-xs text-slate-500 hover:text-slate-700"
+          onclick="closeModal();"
+
+        >
+          ✕
+        </button>
+      </div>
+
+      <!-- BODY MODAL -->
+      <div class="p-4">
+        <form
+          hx-post="{{ url_for('key.borrow') }}"
+          hx-target="#modal-container"
+          hx-swap="innerHTML"
+          onsubmit="return validateBorrowTTD();"
+        >
+          <div class="mb-3">
+            <label class="block text-xs font-medium text-slate-700 mb-1">
+              Ticket MBS
+            </label>
+            <input
+              type="text"
+              name="ticket_mbs"
+              class="w-full border rounded px-3 py-2 text-xs focus:outline-none focus:ring"
+              required
+            >
+          </div>
+
+          <div class="mb-3">
+            <label class="block text-xs font-medium text-slate-700 mb-1">
+              Nama Pengunjung
+            </label>
+            <input
+              type="text"
+              name="visitor_name"
+              class="w-full border rounded px-3 py-2 text-xs focus:outline-none focus:ring"
+              required
+            >
+          </div>
+
+          <div class="mb-3">
+            <label class="block text-xs font-medium text-slate-700 mb-1">
+              Vendor / Divisi
+            </label>
+            <input
+              type="text"
+              name="visitor_company"
+              class="w-full border rounded px-3 py-2 text-xs focus:outline-none focus:ring"
+              required
+              >
+          </div>
+
+          <div class="mb-3">
+            <label class="block text-xs font-medium text-slate-700 mb-1">
+              Lokasi Rak
+            </label>
+            <select
+              name="rack_location"
+              class="w-full border rounded px-3 py-2 text-xs focus:outline-none focus:ring"
+              required
+            >
+              <option value="">Pilih Lokasi Rak</option>
+              {% for rack in racks %}
+                <option
+                  value="{{ rack.name }}"
+                  {% if rack.is_borrowed %}disabled{% endif %}
+                >
+                  {{ rack.name }}{% if rack.is_borrowed %} (sedang dipinjam){% endif %}
+                </option>
+              {% endfor %}
+            </select>
+            <p class="mt-1 text-[10px] text-slate-400">
+              Rak yang sedang dipinjam akan muncul tapi tidak bisa dipilih.
+            </p>
+          </div>
+
+          <div class="mb-4">
+            <label class="block text-xs font-medium text-slate-700 mb-1">
+              Jam Masuk
+            </label>
+            <input
+              type="datetime-local"
+              name="time_in"
+              class="w-full border rounded px-3 py-2 text-xs focus:outline-none focus:ring"
+              value="{{ now.strftime('%Y-%m-%dT%H:%M') }}"
+              required
+            >
+          </div>
+
+          <div class="mb-3">
+            <label class="block text-xs font-medium text-slate-700 mb-1">
+              Petugas NOC (PINJAM)
+            </label>
+            <select
+              name="staff_in_name"
+              class="w-full border rounded px-3 py-2 text-xs focus:outline-none focus:ring"
+              required
+            >
+              <option value="">Pilih petugas</option>
+              {% for name in staff_names %}
+                <option value="{{ name }}">{{ name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- TTD SECTION (pakai popup canvas) -->
+          <div class="grid grid-cols-1 gap-3 mb-4">
+            <!-- TTD Pengunjung -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-xs font-medium text-slate-700">
+                  TTD Pengunjung (PINJAM)
+                </label>
+                <button
+                  type="button"
+                  class="text-[11px] text-slate-500 hover:text-slate-700"
+                  onclick="clearTtdPreview('in_visitor');"
+                >
+                  Clear
+                </button>
+              </div>
+
+              <button
+                type="button"
+                class="w-full border rounded px-3 py-2 text-[11px] text-slate-600 bg-slate-50 hover:bg-slate-100 text-left"
+                onclick="openTtdPopup('in_visitor', 'Tanda Tangan Pengunjung (PINJAM)');"
+              >
+                Klik untuk tanda tangan dengan Pad Signature
+              </button>
+
+              <!-- preview kecil -->
+              <div class="mt-1">
+                <img
+                  id="preview_in_visitor"
+                  class="hidden border rounded max-h-20"
+                  alt="Preview TTD Pengunjung"
+                >
+              </div>
+
+              <!-- hidden value (base64) dikirim ke backend -->
+              <input type="hidden" name="sig_in_visitor" id="sig_in_visitor">
+            </div>
+
+            <!-- TTD Petugas -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-xs font-medium text-slate-700">
+                  TTD Petugas (PINJAM)
+                </label>
+                <button
+                  type="button"
+                  class="text-[11px] text-slate-500 hover:text-slate-700"
+                  onclick="clearTtdPreview('in_staff');"
+                >
+                  Clear
+                </button>
+              </div>
+
+              <button
+                type="button"
+                class="w-full border rounded px-3 py-2 text-[11px] text-slate-600 bg-slate-50 hover:bg-slate-100 text-left"
+                onclick="openTtdPopup('in_staff', 'Tanda Tangan Petugas (PINJAM)');"
+              >
+                Klik untuk tanda tangan dengan Pad Signature
+              </button>
+
+              <!-- preview kecil -->
+              <div class="mt-1">
+                <img
+                  id="preview_in_staff"
+                  class="hidden border rounded max-h-20"
+                  alt="Preview TTD Petugas"
+                >
+              </div>
+
+              <!-- hidden value (base64) dikirim ke backend -->
+              <input type="hidden" name="sig_in_staff" id="sig_in_staff">
+            </div>
+          </div>
+
+          <div class="flex justify-end space-x-2">
+            <button
+              type="button"
+              class="px-3 py-1 text-xs border rounded text-slate-600 hover:bg-slate-50"
+              onclick="closeModal();"
+
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              class="px-3 py-1 text-xs bg-slate-900 text-white rounded hover:bg-slate-800"
+            >
+              Simpan
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+      <!-- POPUP TTD (canvas besar) -->
+    <div
+      id="ttdPopup"
+      class="fixed inset-0 z-60 hidden items-center justify-center bg-black/40"
+    >
+      <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-4">
+        <div class="flex items-center justify-between mb-2">
+          <h2
+            id="ttdPopupTitle"
+            class="text-sm font-semibold text-slate-800"
+          >
+            Tanda Tangan
+          </h2>
+          <button
+            type="button"
+            class="text-xs text-slate-500 hover:text-slate-700"
+            onclick="closeTtdPopup();"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div class="border rounded bg-slate-50 overflow-hidden">
+          <canvas
+            id="ttdCanvas"
+            class="w-full h-40 block"
+            style="touch-action:none;"
+          ></canvas>
+        </div>
+
+        <p class="mt-2 text-[10px] text-slate-500">
+          Gunakan Pad Signature atau mouse untuk tanda tangan.
+        </p>
+
+        <div class="mt-3 flex justify-between">
+          <button
+            type="button"
+            class="px-3 py-1 text-[11px] border rounded text-slate-600 hover:bg-slate-50"
+            onclick="clearTtdCanvas();"
+          >
+            Clear
+          </button>
+          <button
+            type="button"
+            class="px-3 py-1 text-[11px] bg-slate-900 text-white rounded hover:bg-slate-800"
+            onclick="saveTtdFromPopup();"
+          >
+            Simpan Tanda Tangan
+          </button>
+        </div>
+      </div>
+    </div>
+<script>
+  let sigPadBorrow = null;
+  let currentTtdKey = null; // 'in_visitor' atau 'in_staff'
+  let borrowResizeHandler = null;
+
+  function setupBorrowCanvas() {
+    const canvas = document.getElementById('ttdCanvas');
+    if (!canvas) return;
+
+    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+    const rect = canvas.getBoundingClientRect();
+
+    canvas.width = rect.width * ratio;
+    canvas.height = rect.height * ratio;
+
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+    // bikin SignaturePad BARU tiap kali modal dipakai
+    sigPadBorrow = new SignaturePad(canvas, {
+      backgroundColor: 'rgba(255,255,255,1)',
+      penColor: 'black'
+    });
+
+    // kalau sebelumnya sudah ada handler resize, cabut dulu
+    if (borrowResizeHandler) {
+      window.removeEventListener('resize', borrowResizeHandler);
+    }
+
+    // handler baru untuk resize/zoom
+    borrowResizeHandler = function () {
+      const rect2 = canvas.getBoundingClientRect();
+      const ratio2 = Math.max(window.devicePixelRatio || 1, 1);
+
+      canvas.width = rect2.width * ratio2;
+      canvas.height = rect2.height * ratio2;
+      ctx.setTransform(ratio2, 0, 0, ratio2, 0, 0);
+
+      if (sigPadBorrow) sigPadBorrow.clear();
+    };
+
+    window.addEventListener('resize', borrowResizeHandler);
+  }
+
+  function openTtdPopup(key, titleText) {
+    currentTtdKey = key; // 'in_visitor' / 'in_staff'
+
+    const popup = document.getElementById('ttdPopup');
+    popup.classList.remove('hidden');
+    popup.classList.add('flex');
+
+    const titleEl = document.getElementById('ttdPopupTitle');
+    if (titleText) titleEl.textContent = titleText;
+
+    // SELALU init ulang ke canvas yang BARU di DOM
+    setupBorrowCanvas();
+  }
+
+  function closeTtdPopup() {
+    const popup = document.getElementById('ttdPopup');
+    popup.classList.add('hidden');
+    popup.classList.remove('flex');
+  }
+
+  function clearTtdCanvas() {
+    if (sigPadBorrow) sigPadBorrow.clear();
+  }
+
+  function saveTtdFromPopup() {
+    if (!sigPadBorrow || sigPadBorrow.isEmpty()) {
+      alert('Tanda tangan masih kosong.');
+      return;
+    }
+    if (!currentTtdKey) {
+      alert('Field TTD tidak dikenali.');
+      return;
+    }
+
+    const dataUrl = sigPadBorrow.toDataURL('image/png');
+
+    // hidden input (sig_in_visitor / sig_in_staff)
+    const hidden = document.getElementById('sig_' + currentTtdKey);
+    if (hidden) hidden.value = dataUrl;
+
+    // preview img (preview_in_visitor / preview_in_staff)
+    const preview = document.getElementById('preview_' + currentTtdKey);
+    if (preview) {
+      preview.src = dataUrl;
+      preview.classList.remove('hidden');
+    }
+
+    closeTtdPopup();
+  }
+
+  function clearTtdPreview(key) {
+    const hidden = document.getElementById('sig_' + key);
+    const preview = document.getElementById('preview_' + key);
+    if (hidden) hidden.value = '';
+    if (preview) {
+      preview.src = '';
+      preview.classList.add('hidden');
+    }
+  }
+</script>
+
+
+    
+</div>

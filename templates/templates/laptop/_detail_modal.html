@@ -1,0 +1,118 @@
+<div class="fixed inset-0 bg-black/40 z-50 overflow-y-auto">
+  <div class="min-h-full flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-xl max-h-[90vh] overflow-y-auto">
+      <!-- HEADER MODAL -->
+      <div class="flex items-center justify-between px-4 pt-4 pb-2 border-b">
+    <h2 class="text-sm font-semibold text-slate-800 mb-3">
+      Detail Peminjaman Laptop
+    </h2>
+        <button
+          type="button"
+          class="text-xs text-slate-500 hover:text-slate-700"
+          onclick="document.getElementById('modal-container').innerHTML='';"
+        >
+          ✕
+        </button>
+    </div>  
+
+    <!-- BODY MODAL -->
+    <div class="p-4"> 
+    <div class="grid grid-cols-2 gap-4 text-xs mb-4">
+      <div class="space-y-1">
+        <div><span class="font-semibold">Ticket MBS:</span> {{ log.ticket_mbs or '-' }}</div>
+        <div><span class="font-semibold">Peminjam:</span> {{ log.borrower_name }}</div>
+        <div><span class="font-semibold">Divisi:</span> {{ log.borrower_division }}</div>
+        <div><span class="font-semibold">Laptop:</span> {{ log.laptop_name }}</div>
+        <div><span class="font-semibold">Keperluan:</span> {{ log.purpose }}</div>
+      </div>
+      <div class="space-y-1">
+        <div><span class="font-semibold">Status:</span> {{ log.status }}</div>
+        <div>
+          
+          <span class="font-semibold">Tanggal Pinjam:</span>
+          {{ log.time_out.strftime('%Y-%m-%d %H:%M') if log.time_out else '-' }}
+        </div>
+
+        <div>
+        <span class="font-semibold">Rencana Tanggal Kembali:</span>
+          {{ log.planned_return_date.strftime('%Y-%m-%d') if log.planned_return_date else '-' }}
+        </div>
+
+        <div>
+          <span class="font-semibold">Tanggal Kembali:</span>
+          {{ log.time_in.strftime('%Y-%m-%d %H:%M') if log.time_in else '-' }}
+        </div>
+
+        <div>
+          <span class="font-semibold">Ketepatan Pengembalian:</span>
+          {{ get_return_status(log) }}
+        </div>
+
+        
+        <div><span class="font-semibold">Petugas PINJAM:</span> {{ log.staff_out_name or '-' }}</div>
+        <div><span class="font-semibold">Petugas KEMBALI:</span> {{ log.staff_in_name or '-' }}</div>
+        <div>
+          <span class="font-semibold">Dibuat:</span>
+          {{ log.created_at.strftime('%Y-%m-%d %H:%M') if log.created_at else '-' }}
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 text-xs">
+      <div>
+        <div class="font-semibold mb-1">TTD Peminjam (PINJAM)</div>
+        {% if log.signature_out_borrower %}
+          <img src="{{ log.signature_out_borrower }}" alt="TTD Peminjam Pinjam" class="border rounded w-full h-24 object-contain bg-white">
+        {% else %}
+          <div class="border rounded w-full h-24 flex items-center justify-center text-[11px] text-slate-400">
+            Tidak ada TTD
+          </div>
+        {% endif %}
+      </div>
+      <div>
+        <div class="font-semibold mb-1">TTD Petugas (PINJAM)</div>
+        {% if log.signature_out_staff %}
+          <img src="{{ log.signature_out_staff }}" alt="TTD Petugas Pinjam" class="border rounded w-full h-24 object-contain bg-white">
+        {% else %}
+          <div class="border rounded w-full h-24 flex items-center justify-center text-[11px] text-slate-400">
+            Tidak ada TTD
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 text-xs mt-4">
+      <div>
+        <div class="font-semibold mb-1">TTD Peminjam (KEMBALI)</div>
+        {% if log.signature_in_borrower %}
+          <img src="{{ log.signature_in_borrower }}" alt="TTD Peminjam Kembali" class="border rounded w-full h-24 object-contain bg-white">
+        {% else %}
+          <div class="border rounded w-full h-24 flex items-center justify-center text-[11px] text-slate-400">
+            Belum ada pengembalian
+          </div>
+        {% endif %}
+      </div>
+      <div>
+        <div class="font-semibold mb-1">TTD Petugas (KEMBALI)</div>
+        {% if log.signature_in_staff %}
+          <img src="{{ log.signature_in_staff }}" alt="TTD Petugas Kembali" class="border rounded w-full h-24 object-contain bg-white">
+        {% else %}
+          <div class="border rounded w-full h-24 flex items-center justify-center text-[11px] text-slate-400">
+            Belum ada pengembalian
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="flex justify-end mt-4">
+      <button
+        type="button"
+        class="px-3 py-1 text-xs border rounded text-slate-600"
+        onclick="document.getElementById('modal-container').innerHTML = '';"
+      >
+        Tutup
+      </button>
+    </div>
+  </div>
+</div>
+      </div>

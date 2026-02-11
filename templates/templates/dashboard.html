@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - RACKess{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-2 sm:px-0 space-y-6">
+  <h1 class="text-xl font-semibold text-slate-800">Dashboard</h1>
+
+  <!-- STAT CARDS -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Kunci -->
+    <div class="bg-white rounded-xl shadow-sm px-5 py-4 flex items-center gap-3">
+      <div class="h-9 w-9 rounded-full bg-sky-100 flex items-center justify-center text-sky-500 text-lg">
+        🔑
+      </div>
+      <div>
+        <div class="text-[11px] uppercase tracking-wide text-slate-400">
+          Kunci Sedang Dipinjam
+        </div>
+        <div class="text-3xl font-semibold text-slate-900 leading-tight">
+          {{ total_key_borrowed }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Laptop -->
+    <div class="bg-white rounded-xl shadow-sm px-5 py-4 flex items-center gap-3">
+      <div class="h-9 w-9 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-500 text-lg">
+        💻
+      </div>
+      <div>
+        <div class="text-[11px] uppercase tracking-wide text-slate-400">
+          Laptop Sedang Dipinjam
+        </div>
+        <div class="text-3xl font-semibold text-slate-900 leading-tight">
+          {{ total_laptop_borrowed }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LAST ACTIVITIES -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Kunci -->
+    <div class="bg-white rounded-xl shadow-sm p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-semibold text-slate-800">
+          Aktivitas Kunci Terakhir
+        </h2>
+        <a
+          href="{{ url_for('key.index') }}"
+          class="text-[11px] text-sky-600 hover:text-sky-700 hover:underline"
+        >
+          Lihat semua
+        </a>
+      </div>
+
+      <table class="w-full text-xs">
+        <thead class="border-b border-slate-100">
+          <tr class="text-left text-[11px] text-slate-500">
+            <th class="py-1.5 pr-2">Ticket</th>
+            <th class="py-1.5 pr-2">Pengunjung</th>
+            <th class="py-1.5 pr-2">Rak</th>
+            <th class="py-1.5 pr-2">Status</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-50">
+          {% for log in last_key_logs %}
+          <tr class="align-top">
+            <td class="py-1.5 pr-2 text-slate-700">{{ log.ticket_mbs }}</td>
+            <td class="py-1.5 pr-2 text-slate-700">{{ log.visitor_name }}</td>
+            <td class="py-1.5 pr-2 text-slate-700">{{ log.rack_location }}</td>
+            <td class="py-1.5 pr-2">
+              <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium
+                {% if log.status == 'borrowed' %}
+                  bg-amber-50 text-amber-700 border border-amber-100
+                {% elif log.status == 'returned' %}
+                  bg-emerald-50 text-emerald-700 border border-emerald-100
+                {% else %}
+                  bg-slate-50 text-slate-600 border border-slate-100
+                {% endif %}
+              ">
+                {{ log.status }}
+              </span>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="4" class="py-3 text-center text-slate-400 italic">
+              Belum ada data.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Laptop -->
+    <div class="bg-white rounded-xl shadow-sm p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-semibold text-slate-800">
+          Aktivitas Laptop Terakhir
+        </h2>
+        <a
+          href="{{ url_for('laptop.index') }}"
+          class="text-[11px] text-sky-600 hover:text-sky-700 hover:underline"
+        >
+          Lihat semua
+        </a>
+      </div>
+
+      <table class="w-full text-xs">
+        <thead class="border-b border-slate-100">
+          <tr class="text-left text-[11px] text-slate-500">
+            <th class="py-1.5 pr-2">Laptop</th>
+            <th class="py-1.5 pr-2">Peminjam</th>
+            <th class="py-1.5 pr-2">Divisi</th>
+            <th class="py-1.5 pr-2">Status</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-50">
+          {% for log in last_laptop_logs %}
+          <tr class="align-top">
+            <td class="py-1.5 pr-2 text-slate-700">{{ log.laptop_name }}</td>
+            <td class="py-1.5 pr-2 text-slate-700">{{ log.borrower_name }}</td>
+            <td class="py-1.5 pr-2 text-slate-700">{{ log.borrower_division }}</td>
+            <td class="py-1.5 pr-2">
+              <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium
+                {% if log.status == 'borrowed' %}
+                  bg-amber-50 text-amber-700 border border-amber-100
+                {% elif log.status == 'returned' %}
+                  bg-emerald-50 text-emerald-700 border border-emerald-100
+                {% else %}
+                  bg-slate-50 text-slate-600 border border-slate-100
+                {% endif %}
+              ">
+                {{ log.status }}
+              </span>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="4" class="py-3 text-center text-slate-400 italic">
+              Belum ada data.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

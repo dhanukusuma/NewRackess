@@ -1,0 +1,140 @@
+<div class="fixed inset-0 bg-black/40 z-50 overflow-y-auto">
+  <div class="min-h-full flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-xl max-h-[90vh] overflow-y-auto">
+      <!-- HEADER MODAL -->
+      <div class="flex items-center justify-between px-4 pt-4 pb-2 border-b">
+      <h2 class="text-sm font-semibold text-slate-800">
+        Detail Peminjaman Kunci Rak
+      </h2>
+      <button
+        class="text-xs text-slate-500 hover:text-slate-700"
+        onclick="closeModal();"
+
+      >
+        ✕
+      </button>
+    </div>
+
+    <!-- BODY MODAL -->
+    <div class="p-4">  
+      <!-- Info utama -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px] text-slate-700 mb-4">
+        <div class="space-y-1">
+          <div><span class="font-semibold">Ticket MBS:</span> {{ log.ticket_mbs }}</div>
+          <div><span class="font-semibold">Pengunjung:</span> {{ log.visitor_name }}</div>
+          <div><span class="font-semibold">Perusahaan/Divisi:</span> {{ log.visitor_company or '-' }}</div>
+          <div><span class="font-semibold">Lokasi Rak:</span> {{ log.rack_location }}</div>
+        </div>
+        <div class="space-y-1">
+          <div><span class="font-semibold">Status:</span> {{ log.status }}</div>
+          <div>
+            <span class="font-semibold">Jam Masuk:</span>
+            {{ log.time_in.strftime('%Y-%m-%d %H:%M') if log.time_in else '-' }}
+          </div>
+          <div>
+            <span class="font-semibold">Jam Keluar:</span>
+            {{ log.time_out.strftime('%Y-%m-%d %H:%M') if log.time_out else '-' }}
+          </div>
+          <div>
+            <span class="font-semibold">Petugas (PINJAM):</span>
+            {{ log.staff_in_name or '-' }}
+          </div>
+          <div>
+            <span class="font-semibold">Petugas (KEMBALI):</span>
+            {{ log.staff_out_name or '-' }}
+          </div>
+          <div>
+            <span class="font-semibold">Dibuat:</span>
+            {{ log.created_at.strftime('%Y-%m-%d %H:%M') if log.created_at else '-' }}
+          </div>
+        </div>
+
+
+      <!-- TTD Saat PINJAM -->
+      <div class="mb-4">
+        <h3 class="text-[11px] font-semibold text-slate-800 mb-2">
+          Tanda Tangan Saat PINJAM
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <div class="text-[11px] text-slate-600 mb-1">Pengunjung</div>
+            <div class="border rounded bg-slate-50 flex items-center justify-center min-h-[80px]">
+              {% if log.signature_in_visitor %}
+                <img
+                  src="{{ log.signature_in_visitor }}"
+                  alt="TTD Pengunjung Pinjam"
+                  class="max-h-24 object-contain"
+                >
+              {% else %}
+                <span class="text-[11px] text-slate-400 italic">Belum ada TTD.</span>
+              {% endif %}
+            </div>
+          </div>
+          <div>
+            <div class="text-[11px] text-slate-600 mb-1">Petugas</div>
+            <div class="border rounded bg-slate-50 flex items-center justify-center min-h-[80px]">
+              {% if log.signature_in_staff %}
+                <img
+                  src="{{ log.signature_in_staff }}"
+                  alt="TTD Petugas Pinjam"
+                  class="max-h-24 object-contain"
+                >
+              {% else %}
+                <span class="text-[11px] text-slate-400 italic">Belum ada TTD.</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TTD Saat KEMBALI -->
+      <div class="mb-4">
+        <h3 class="text-[11px] font-semibold text-slate-800 mb-2">
+          Tanda Tangan Saat KEMBALI
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <div class="text-[11px] text-slate-600 mb-1">Pengunjung</div>
+            <div class="border rounded bg-slate-50 flex items-center justify-center min-h-[80px]">
+              {% if log.signature_out_visitor %}
+                <img
+                  src="{{ log.signature_out_visitor }}"
+                  alt="TTD Pengunjung Kembali"
+                  class="max-h-24 object-contain"
+                >
+              {% else %}
+                <span class="text-[11px] text-slate-400 italic">Belum ada TTD.</span>
+              {% endif %}
+            </div>
+          </div>
+          <div>
+            <div class="text-[11px] text-slate-600 mb-1">Petugas</div>
+            <div class="border rounded bg-slate-50 flex items-center justify-center min-h-[80px]">
+              {% if log.signature_out_staff %}
+                <img
+                  src="{{ log.signature_out_staff }}"
+                  alt="TTD Petugas Kembali"
+                  class="max-h-24 object-contain"
+                >
+              {% else %}
+                <span class="text-[11px] text-slate-400 italic">Belum ada TTD.</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end">
+        <button
+          type="button"
+          class="px-3 py-1 text-xs border rounded text-slate-600 hover:bg-slate-50"
+          onclick="closeModal();"
+
+        >
+          Tutup
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+

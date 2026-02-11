@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-4 flex items-center justify-between">
+  <h1 class="text-lg font-semibold text-slate-800">
+    Log Peminjaman Laptop
+  </h1>
+
+  <div class="flex items-center gap-2">
+    <button
+      id="btn-export-laptop-pdf"
+      type="button"
+      class="px-3 py-1 text-xs border rounded text-slate-700 hover:bg-slate-50"
+    >
+      Export PDF (Filter)
+    </button>
+
+    <button
+      id="btn-export-laptop-excel"
+      type="button"
+      class="px-3 py-1 text-xs border border-emerald-300 text-emerald-700 rounded hover:bg-emerald-50"
+    >
+      Export Excel (sesuai filter)
+    </button>
+
+    <button
+      class="px-3 py-1 text-xs bg-slate-900 text-white rounded hover:bg-slate-800"
+      hx-get="{{ url_for('laptop.borrow_form') }}"
+      hx-target="#modal-container"
+      hx-trigger="click"
+    >
+      + Peminjaman Laptop
+    </button>
+  </div>
+</div>
+
+{% if borrowed_logs %}
+<div class="mb-4 bg-white rounded-lg shadow px-3 py-2 text-xs">
+  <div class="font-semibold text-slate-700 mb-1">
+    Laptop yang sedang dipinjam ({{ borrowed_logs|length }})
+  </div>
+  <div class="flex flex-wrap gap-2">
+    {% for log in borrowed_logs %}
+      <div class="px-2 py-1 rounded-full bg-amber-100 text-amber-800">
+        <span class="font-semibold">{{ log.laptop_name }}</span>
+        — {{ log.borrower_name }}
+        {% if log.borrower_division %} ({{ log.borrower_division }}){% endif %}
+        {% if log.time_out %}
+          • sejak {{ log.time_out.strftime('%Y-%m-%d %H:%M') }}
+        {% endif %}
+        {% if log.staff_out_name %}
+          • petugas: {{ log.staff_out_name }}
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{# ===== FILTER BAR (search + tanggal + status) ===== #}
+<form
+  id="laptop-filter-form"
+  class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-3 text-xs"
+  hx-get="{{ url_for('laptop.data') }}"
+  hx-target="#laptop-table-body"
+  hx-swap="outerHTML"
+  hx-trigger="change, keyup changed delay:500ms"
+>
+  <!-- Search -->
+  <div>
+    <label class="block mb-1 text-slate-600">Search</label>
+    <input
+      type="text"
+      name="q"
+      class="w-full border rounded px-2 py-1 focus:outline-none focus:ring"
+      placeholder="Nama / Divisi / Laptop / Ticket"
+      value="{{ request.args.get('q', '') }}"
+    >
+  </div>
+
+  <!-- Tanggal dari -->
+  <div>
+    <label class="block mb-1 text-slate-600">Tanggal dari</label>
+    <input
+      type="date"
+      name="date_from"
+      class="w-full border rounded px-2 py-1 focus:outline-none focus:ring"
+      value="{{ request.args.get('date_from', '') }}"
+    >
+  </div>
+
+  <!-- Tanggal sampai -->
+  <div>
+    <label class="block mb-1 text-slate-600">Tanggal sampai</label>
+    <input
+      type="date"
+      name="date_to"
+      class="w-full border rounded px-2 py-1 focus:outline-none focus:ring"
+      value="{{ request.args.get('date_to', '') }}"
+    >
+  </div>
+
+  <!-- Status -->
+  <div>
+    <label class="block mb-1 text-slate-600">Status</label>
+    <select
+      name="status"
+      class="w-full border rounded px-2 py-1 focus:outline-none focus:ring"
+    >
+      {% set cur_status = request.args.get('status', '') %}
+      <option value=""         {{ '' == cur_status and 'selected' or '' }}>Semua</option>
+      <option value="borrowed" {{ 'borrowed' == cur_status and 'selected' or '' }}>Sedang dipinjam</option>
+      <option value="returned" {{ 'returned' == cur_status and 'selected' or '' }}>Sudah kembali</option>
+    </select>
+  </div>
+</form>
+
+<div class="bg-white rounded-lg shadow overflow-x-auto">
+  <table class="min-w-full text-xs">
+    <thead class="border-b bg-slate-50">
+      <tr class="text-left text-slate-500">
+        <th class="py-2 px-3">Ticket MBS</th>
+        <th class="px-3">Peminjam</th>
+        <th class="px-3">Divisi</th>
+        <th class="px-3">Laptop</th>
+        <th class="px-3">Keperluan</th>
+        <th class="px-3">Status</th>
+        <th class="px-3">Tanggal Pinjam</th>
+        <th class="px-3">Rencana Kembali</th>
+        <th class="px-3">Tanggal Kembali</th>
+        <th class="px-3">Ketepatan</th>
+        <th class="px-3">Petugas PINJAM</th>
+        <th class="px-3">Petugas KEMBALI</th>
+        <th class="px-3">Aksi</th>
+      </tr>
+    </thead>
+    {% include "laptop/_table_body.html" %}
+  </table>
+</div>
+
+<div id="modal-container"></div>
+
+<script>
+  (function () {
+    const form = document.getElementById("laptop-filter-form");
+
+    const btnExcel = document.getElementById("btn-export-laptop-excel");
+    if (btnExcel) {
+      btnExcel.addEventListener("click", function () {
+        if (!form) {
+          window.location = "{{ url_for('laptop.export_excel') }}";
+          return;
+        }
+        const params = new URLSearchParams(new FormData(form)).toString();
+        window.location = "{{ url_for('laptop.export_excel') }}" + "?" + params;
+      });
+    }
+
+    const btnPdf = document.getElementById("btn-export-laptop-pdf");
+    if (btnPdf) {
+      btnPdf.addEventListener("click", function () {
+        if (!form) {
+          window.open("{{ url_for('laptop.export_pdf') }}", "_blank");
+          return;
+        }
+        const params = new URLSearchParams(new FormData(form)).toString();
+        window.open("{{ url_for('laptop.export_pdf') }}" + "?" + params, "_blank");
+      });
+    }
+  })();
+</script>
+
+{% endblock %}

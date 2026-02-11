@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}Peminjaman Kunci - RACKess{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+  <h1 class="text-lg font-semibold text-slate-800">Log Peminjaman Kunci Rak</h1>
+
+  <div class="flex items-center gap-2">
+    <button
+      id="btn-export-pdf"
+      type="button"
+      class="px-3 py-1 text-xs border border-slate-300 text-slate-700 rounded hover:bg-slate-50"
+    >
+      Export PDF (Filter)
+    </button>
+
+    <button
+      id="btn-export-excel"
+      type="button"
+      class="px-3 py-1 text-xs border border-emerald-300 text-emerald-700 rounded hover:bg-emerald-50"
+    >
+      Export Excel (Filter)
+    </button>
+
+
+    <button
+      class="px-3 py-1 text-xs bg-slate-900 text-white rounded"
+      hx-get="{{ url_for('key.borrow_form') }}"
+      hx-target="#modal-container"
+      hx-trigger="click"
+    >
+      + Peminjaman Kunci
+    </button>
+  </div>
+</div>
+
+{% if borrowed_logs %}
+<div class="mb-4 bg-white rounded-lg shadow px-3 py-2 text-xs">
+  <div class="flex items-center justify-between mb-1">
+    <div class="font-semibold text-slate-700">
+      Rak yang sedang dipinjam ({{ borrowed_logs|length }})
+    </div>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    {% for log in borrowed_logs %}
+      <div class="px-2 py-1 rounded-full bg-amber-100 text-amber-800">
+        <span class="font-semibold">{{ log.rack_location }}</span>
+        — {{ log.visitor_name }}
+        {% if log.visitor_company %} ({{ log.visitor_company }}){% endif %}
+        {% if log.time_in %}
+          • sejak {{ log.time_in.strftime('%H:%M') }}
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+
+<form id="key-filter-form" class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+  <div>
+    <label class="block mb-1 text-slate-600">Search</label>
+    <input
+      id="key-search"
+      type="text"
+      name="q"
+      placeholder="Ticket / Nama / Divisi / Rak"
+      class="w-full border rounded px-2 py-1 focus:outline-none focus:ring"
+      hx-get="{{ url_for('key.data') }}"
+      hx-target="#key-table-body"
+      hx-swap="outerHTML"
+      hx-trigger="keyup changed delay:500ms"
+      hx-include="#key-filter-form"
+    />
+  </div>
+
+  <div>
+    <label class="block mb-1 text-slate-600">Tanggal dari</label>
+    <input
+      type="date"
+      name="date_from"
+      class="w-full border rounded px-2 py-1 focus:outline-none focus:ring"
+      hx-get="{{ url_for('key.data') }}"
+      hx-target="#key-table-body"
+      hx-swap="outerHTML"
+      hx-trigger="change"
+      hx-include="#key-filter-form"
+    />
+
+  </div>
+
+  <div>
+    <label class="block mb-1 text-slate-600">Tanggal sampai</label>
+    <input
+      type="date"
+      name="date_to"
+      class="w-full border rounded px-2 py-1 focus:outline-none focus:ring"
+      hx-get="{{ url_for('key.data') }}"
+      hx-target="#key-table-body"
+      hx-swap="outerHTML"
+      hx-trigger="change"
+      hx-include="#key-filter-form"
+    />
+
+  </div>
+
+  <div>
+    <label class="block mb-1 text-slate-600">Status & Urutan</label>
+    <div class="flex gap-2">
+      <select
+        name="status"
+        class="border rounded px-2 py-1 focus:outline-none focus:ring w-1/2"
+        hx-get="{{ url_for('key.data') }}"
+        hx-target="#key-table-body"
+        hx-swap="outerHTML"
+        hx-trigger="change"
+        hx-include="#key-filter-form"
+      >
+
+        <option value="">Semua</option>
+        <option value="borrowed">Sedang dipinjam</option>
+        <option value="returned">Sudah kembali</option>
+      </select>
+
+      <select
+        name="sort"
+        class="border rounded px-2 py-1 focus:outline-none focus:ring w-1/2"
+        hx-get="{{ url_for('key.data') }}"
+        hx-target="#key-table-body"
+        hx-swap="outerHTML"
+        hx-trigger="change"
+        hx-include="#key-filter-form"
+      >
+
+        <option value="time_in_desc">Terbaru dulu</option>
+        <option value="time_in_asc">Terlama dulu</option>
+      </select>
+    </div>
+  </div>
+</form>
+
+
+<div class="bg-white rounded-lg shadow overflow-x-auto">
+  <table class="min-w-full text-xs">
+    <thead class="border-b bg-slate-50">
+      <tr class="text-left text-slate-500">
+        <th class="py-2 px-3">Ticket MBS</th>
+        <th class="px-3">Pengunjung</th>
+        <th class="px-3">Perusahaan / Divisi</th>
+        <th class="px-3">Rak</th>
+        <th class="px-3">Status</th>
+        <th class="px-3">Jam Masuk</th>
+        <th class="px-3">Jam Keluar</th>
+        <th class="px-3">Aksi</th>
+      </tr>
+    </thead>
+
+
+
+    {% include "key/_table_body.html" %}
+
+  </table>
+</div>
+
+<!-- container untuk modal HTMX -->
+<div id="modal-container"></div>
+{% endblock %}

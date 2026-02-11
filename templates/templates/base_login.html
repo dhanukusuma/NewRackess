@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
+  <meta charset="UTF-8" />
+  <title>{% block title %}RACKess - Login{% endblock %}</title>
+  
+    <style>
+    :root {
+      --bg: #eef2f7;
+      --card: #ffffff;
+      --accent: #0ce7f2;
+      --accent2: #38bdf8;
+      --text: #111827;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      color: var(--text);
+    }
+
+    .page-wrapper {
+      padding: 32px 16px;
+    }
+
+    .card {
+      width: 420px;
+      max-width: 100%;
+      margin: 0 auto;
+      background: var(--card);
+      border-radius: 20px;
+      padding: 32px 40px 28px;
+      box-shadow:
+        0 20px 40px rgba(15, 23, 42, 0.08),
+        0 0 0 1px rgba(15, 23, 42, 0.02);
+    }
+
+    .bank-logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 18px;
+    }
+
+    .bank-logo-main {
+      font-weight: 800;
+      font-size: 1.4rem;
+      letter-spacing: 0.03em;
+    }
+
+    .bank-logo-main span:first-child {
+      color: #0284c7;
+    }
+
+    .bank-logo-main span:last-child {
+      color: #22c55e;
+    }
+
+    .bank-subtitle {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.22em;
+      color: #9ca3af;
+    }
+
+    /* ====== LOGO ANIMATED DI TENGAH CARD ====== */
+
+    .logo-wrapper {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 1.4rem;
+      padding: 1.4rem 1.7rem;
+      border-radius: 1.25rem;
+      background: radial-gradient(circle at top, #020617, #020617 55%, #020617);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      box-shadow: 0 12px 22px rgba(15, 23, 42, 0.55);
+      overflow: hidden;
+      margin: 8px auto 4px;
+    }
+
+    .logo-wrapper::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background: conic-gradient(
+        from 180deg,
+        transparent 0,
+        rgba(56, 189, 248, 0.5),
+        transparent 45%
+      );
+      opacity: 0.18;
+      animation: spin 18s linear infinite;
+    }
+
+    .logo-icon {
+      position: relative;
+      width: 64px;
+      height: 88px;
+      padding: 9px 8px;
+      border-radius: 18px;
+      background: linear-gradient(160deg, #020617, #020617 60%, #020617);
+      border: 2px solid rgba(148, 163, 184, 0.7);
+      box-shadow:
+        0 0 0 1px rgba(15, 23, 42, 1),
+        0 10px 20px rgba(0, 0, 0, 0.8);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .logo-icon::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        145deg,
+        rgba(148, 163, 184, 0.22),
+        transparent 45%
+      );
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+
+    .rack-slot {
+      height: 17px;
+      border-radius: 9px;
+      background: linear-gradient(90deg, #020617, #020617 60%, #020617);
+      border: 0.8px solid rgba(30, 64, 175, 0.8);
+      display: flex;
+      align-items: center;
+      padding: 0 5px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .rack-slot::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        120deg,
+        rgba(148, 163, 184, 0.25),
+        transparent 40%
+      );
+      opacity: 0.35;
+    }
+
+    .indicators {
+      display: flex;
+      gap: 3px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .led {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #0f172a;
+      box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.8);
+      transition:
+        background 0.12s ease-out,
+        box-shadow 0.12s ease-out,
+        transform 0.1s ease-out;
+    }
+
+    .led.off {
+      background: #0f172a;
+      box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.8);
+      transform: scale(1);
+    }
+
+    .led.on {
+      background: #22c55e;
+      box-shadow: 0 0 9px rgba(34, 197, 94, 1);
+      transform: scale(1.12);
+    }
+
+    .slot-line {
+      flex: 2;
+      height: 2px;
+      margin-left: 6px;
+      border-radius: 999px;
+      background: linear-gradient(
+        90deg,
+        rgba(148, 163, 184, 0.3),
+        rgba(56, 189, 248, 0.9)
+      );
+      opacity: 0.9;
+      position: relative;
+      z-index: 1;
+    }
+
+    .logo-text {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+      z-index: 1;
+    }
+
+    .wordmark {
+      font-size: 1.35rem;
+      letter-spacing: 0.5em;
+      font-weight: 800;
+      color: #e5e7eb;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .subtitle {
+      font-size: 0.68rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #94a3b8;
+      white-space: nowrap;
+    }
+
+    .scan-line {
+      position: absolute;
+      inset: -140% -40%;
+      background: linear-gradient(
+        180deg,
+        transparent 30%,
+        rgba(148, 163, 184, 0.13),
+        transparent 70%
+      );
+      animation: scan 9s linear infinite;
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes scan {
+      0% {
+        transform: translateY(-10%);
+      }
+      100% {
+        transform: translateY(40%);
+      }
+    }
+
+    .logo-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 12px;
+      margin-top: 6px;
+    }
+
+    /* ====== BADGE & FORM ====== */
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      background: #fef3c7;
+      color: #92400e;
+      font-size: 0.7rem;
+      padding: 4px 12px;
+      margin: 10px 0 18px;
+    }
+
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #facc15;
+      box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.35);
+    }
+
+    label {
+      display: block;
+      font-size: 0.78rem;
+      margin-bottom: 4px;
+      color: #4b5563;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      border-radius: 999px;
+      border: 1px solid #e5e7eb;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      background: #f9fafb;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4);
+      background: #ffffff;
+    }
+
+    .helper-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.72rem;
+      color: #9ca3af;
+      margin: 6px 0 20px;
+    }
+
+    .version {
+      color: #cbd5f5;
+    }
+
+    .btn-primary {
+      width: 100%;
+      border: none;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      background: #020617;
+      color: #f9fafb;
+      cursor: pointer;
+      margin-top: 4px;
+      transition: transform 0.08s ease, box-shadow 0.1s ease,
+        background 0.15s ease;
+      box-shadow: 0 10px 18px rgba(15, 23, 42, 0.35);
+    }
+
+    .btn-primary:hover {
+      background: #020617;
+      transform: translateY(-1px);
+      box-shadow: 0 14px 24px rgba(15, 23, 42, 0.4);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+      box-shadow: 0 8px 14px rgba(15, 23, 42, 0.35);
+    }
+
+    .footer-text {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 0.7rem;
+      color: #9ca3af;
+    }
+
+    .footer-text strong {
+      font-weight: 600;
+      color: #6b7280;
+    }
+  </style>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- HTMX -->
+  <script src="https://unpkg.com/htmx.org@2.0.3"></script>
+
+  <!-- Alpine (opsional) -->
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <!-- SignaturePad (gak kepake di login tapi gpp) -->
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.2.0/dist/signature_pad.umd.min.js"></script>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+</head>
+<body class="h-full bg-slate-100">
+  <div class="min-h-full flex items-center justify-center px-4">
+
+    <div class="w-full max-w-md">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            {% if message != "Please log in to access this page." %}
+                <div class="px-4 py-2 rounded text-sm
+                            {% if category == 'error' %}bg-red-100 text-red-800
+                            {% elif category == 'success' %}bg-green-100 text-green-800
+                            {% else %}bg-slate-100 text-slate-800{% endif %}">
+                {{ message }}
+                </div>
+            {% endif %}
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+
+      {% block content %}{% endblock %}
+    </div>
+
+  </div>
+    <!-- JS: LED kedip random -->
+  <script>
+    const leds = document.querySelectorAll('.led');
+
+    leds.forEach((led) => {
+      led.classList.add('off');
+
+      function randomBlink() {
+        led.classList.toggle('on');
+        led.classList.toggle('off');
+
+        // jeda acak antara 60ms – 460ms
+        const delay = 60 + Math.random() * 500;
+        setTimeout(randomBlink, delay);
+      }
+
+      const startDelay = Math.random() * 500;
+      setTimeout(randomBlink, startDelay);
+    });
+  </script>
+
+
+</body>
+
+</html>

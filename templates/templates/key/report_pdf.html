@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Laporan Peminjaman Kunci Rak</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 11px;
+      color: #111827;
+      margin: 24px;
+    }
+    h1 {
+      font-size: 16px;
+      margin: 0 0 4px 0;
+    }
+    h2 {
+      font-size: 12px;
+      margin: 12px 0 4px 0;
+    }
+    .text-muted {
+      color: #6B7280;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      margin-bottom: 16px;
+    }
+    th, td {
+      border: 1px solid #D1D5DB;
+      padding: 4px 6px;
+    }
+    th {
+      background: #F3F4F6;
+      font-weight: 600;
+      font-size: 10px;
+      text-align: left;
+    }
+    td {
+      font-size: 10px;
+      vertical-align: top;
+    }
+    .section {
+      margin-top: 12px;
+      padding-top: 8px;
+      border-top: 1px solid #E5E7EB;
+    }
+    .sig-box {
+      border: 1px solid #D1D5DB;
+      min-height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+    }
+    .sig-img {
+      max-height: 60px;
+      max-width: 100%;
+    }
+    .row-meta {
+      margin-bottom: 6px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Laporan Peminjaman Kunci Rak</h1>
+  <div class="text-muted">
+    Tanggal: {{ report_date.strftime('%d %B %Y') }}<br>
+    Dibuat pada: {{ datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC') if False else '' }}
+  </div>
+
+  <h2>Ringkasan Transaksi</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>No</th>
+        <th>Ticket MBS</th>
+        <th>Pengunjung</th>
+        <th>Perusahaan / Divisi</th>
+        <th>Lokasi Rak</th>
+        <th>Jam Masuk</th>
+        <th>Jam Keluar</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if logs %}
+        {% for log in logs %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ log.ticket_mbs }}</td>
+          <td>{{ log.visitor_name }}</td>
+          <td>{{ log.visitor_company or '-' }}</td>
+          <td>{{ log.rack_location }}</td>
+          <td>
+            {{ log.time_in.strftime('%Y-%m-%d %H:%M') if log.time_in else '-' }}
+          </td>
+          <td>
+            {{ log.time_out.strftime('%Y-%m-%d %H:%M') if log.time_out else '-' }}
+          </td>
+          <td>{{ log.status }}</td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="8" style="text-align:center; font-style:italic; color:#9CA3AF;">
+            Tidak ada transaksi pada tanggal ini.
+          </td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+
+  {% if logs %}
+    <h2>Detail Transaksi & Tanda Tangan</h2>
+
+    {% for log in logs %}
+    <div class="section">
+      <div class="row-meta">
+        <strong>#{{ loop.index }} – Ticket: {{ log.ticket_mbs }}</strong><br>
+        Pengunjung: {{ log.visitor_name }}{% if log.visitor_company %} ({{ log.visitor_company }}){% endif %}<br>
+        Lokasi Rak: {{ log.rack_location }}<br>
+        Jam Masuk: {{ log.time_in.strftime('%Y-%m-%d %H:%M') if log.time_in else '-' }}<br>
+        Jam Keluar: {{ log.time_out.strftime('%Y-%m-%d %H:%M') if log.time_out else '-' }}<br>
+        Status: {{ log.status }}
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>TTD Pengunjung (PINJAM)</th>
+            <th>TTD Petugas (PINJAM)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="sig-box">
+                {% if log.signature_in_visitor %}
+                  <img src="{{ log.signature_in_visitor }}" class="sig-img" alt="TTD Pengunjung Pinjam">
+                {% else %}
+                  <span class="text-muted">Tidak ada TTD.</span>
+                {% endif %}
+              </div>
+            </td>
+            <td>
+              <div class="sig-box">
+                {% if log.signature_in_staff %}
+                  <img src="{{ log.signature_in_staff }}" class="sig-img" alt="TTD Petugas Pinjam">
+                {% else %}
+                  <span class="text-muted">Tidak ada TTD.</span>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table>
+        <thead>
+          <tr>
+            <th>TTD Pengunjung (KEMBALI)</th>
+            <th>TTD Petugas (KEMBALI)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="sig-box">
+                {% if log.signature_out_visitor %}
+                  <img src="{{ log.signature_out_visitor }}" class="sig-img" alt="TTD Pengunjung Kembali">
+                {% else %}
+                  <span class="text-muted">Belum ada / belum kembali.</span>
+                {% endif %}
+              </div>
+            </td>
+            <td>
+              <div class="sig-box">
+                {% if log.signature_out_staff %}
+                  <img src="{{ log.signature_out_staff }}" class="sig-img" alt="TTD Petugas Kembali">
+                {% else %}
+                  <span class="text-muted">Belum ada / belum kembali.</span>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    {% endfor %}
+  {% endif %}
+</body>
+</html>
