@@ -219,19 +219,13 @@ def borrow():
 
 
 
-    # 2️⃣ VERIFY PETUGAS (yang menyerahkan kunci)
+    # 2️⃣ VERIFY / ENROLL PETUGAS (yang menyerahkan kunci)
     result_staff = fp.verify(staff_in_name)
     if not result_staff.get("matched"):
-        
-        logs = get_filtered_logs(request.args)
-        return render_template(
-            "key/_borrow_modal.html",
-            now=datetime.now(),
-            logs=logs,
-            staff_names=STAFF_NAMES,
-            error_message="Fingerprint petugas belum terdaftar. Silakan enroll terlebih dahulu."
-        ), 403
-    staff_in_fp_id = result_staff["fingerprint_id"]
+        enroll_staff_result = fp.enroll(staff_in_name)
+        staff_in_fp_id = enroll_staff_result["fingerprint_id"]
+    else:
+        staff_in_fp_id = result_staff["fingerprint_id"]
     
 
     ############ END OF FINGERPRINT VERIFICATION ############
